@@ -5,7 +5,6 @@ import { View, StyleSheet } from "react-native"
 export function GlobalLayout({ children }) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="auto" />
       <View style={styles.container}>{children}</View>
     </SafeAreaView>
   )

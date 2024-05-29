@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { GlobalLayout } from "../components/Layout";
 import { GlobalStyles } from "../styles/global";
+import { GlobalStyles_darkMode } from "../styles/global-darkMode";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useTheme_darkMode } from "../context/theme-darkMode";
 
 export default function TasksScreen() {
   const globalStyles = GlobalStyles();
+  const globalStyles_darkMode = GlobalStyles_darkMode();
+  const { isDarkMode } = useTheme_darkMode();
+
   const [tasks, setTasks] = useState([]);
   const [taskInput, setTaskInput] = useState('');
   const [dueDate, setDueDate] = useState(null);
@@ -46,16 +51,15 @@ export default function TasksScreen() {
   return (
     <GlobalLayout>
       <GestureHandlerRootView>
-        <View style={{ flex: 1, padding: 0, backgroundColor: '#faf0e6' }}>
-          {/* <Text style={[globalStyles.text, { paddingHorizontal: 20 }]}>Task Management App</Text> */}
-          <View style={{ flexDirection: 'row', marginBottom: 20, padding: 20 }}>
+        <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
+          <View style={{ flexDirection: 'row', marginBottom: 20, padding: 20, paddingTop: 40 }}>
             <TextInput
-              style={[globalStyles.text, { flex: 1, borderWidth: 1, borderColor: '#ccc', padding: 10, paddingLeft: 20, marginRight: 10, borderRadius: 30 }]}
+              style={[globalStyles.text, globalStyles_darkMode.inputText, { flex: 1, borderWidth: 2, padding: 10, paddingLeft: 20, marginRight: 10, borderRadius: 30 }]}
               placeholder="Enter Task"
+              placeholderTextColor={isDarkMode ? "#999" : "#ccc"}
               value={taskInput}
               onChangeText={setTaskInput}
             />
-
             {showDatePicker && (
               <DateTimePicker
                 testID="dateTimePicker"
@@ -63,14 +67,16 @@ export default function TasksScreen() {
                 mode="date"
                 display="default"
                 onChange={onChangeDate}
+                style={styles.dateTimePicker}
+                themeVariant="dark"
               />
             )}
             <TouchableOpacity
               onPress={() => setShowDatePicker(true)}
               disabled={taskInput.trim() === ''}
-              style={[styles.plusButton, taskInput.trim() === '' && styles.disabledButton]}
+              style={[styles.plusButton, globalStyles_darkMode.button, taskInput.trim() === '' && styles.disabledButton]}
             >
-              <Icon name="plus" size={20} color="white" />
+              <Icon name="plus" size={20} style={[globalStyles_darkMode.buttonText]} />
             </TouchableOpacity>
           </View>
           <ScrollView>
@@ -83,7 +89,6 @@ export default function TasksScreen() {
                     Swipeable.close();
                   } else if (direction === 'left') {
                     deleteTask(item.id);
-                    Swipeable.close();
                   }
                 }}
                 renderLeftActions={() => (
@@ -98,8 +103,8 @@ export default function TasksScreen() {
                 )}
               >
                 <View style={[styles.taskItem, item.completed && styles.completedTask]}>
-                  <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles.text]}>{item.text}</Text>
-                  <Text style={[styles.taskText, item.completed && styles.completedText]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
+                  <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles.text, globalStyles_darkMode.text]}>{item.text}</Text>
+                  <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles_darkMode.text]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
                 </View>
               </Swipeable>
             ))}
@@ -111,6 +116,14 @@ export default function TasksScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 0,
+    backgroundColor: '#f5f5f7',
+  },
+  containerDarkMode: {
+    backgroundColor: '#121212',
+  },
   taskItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -153,5 +166,13 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     backgroundColor: '#ccc'
+  },
+  dateTimePicker: {
+    backgroundColor: 'black',
+    borderRadius: 5,
+    borderColor: '#C5C5C5',
+    borderWidth: 1,
+    marginVertical: 10,
+    height: 43,
   },
 });

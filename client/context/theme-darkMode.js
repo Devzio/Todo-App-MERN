@@ -1,30 +1,29 @@
-import { createContext, useState, useContext } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { useEffect } from "react";
+import { createContext, useState, useContext, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ThemeContext = createContext();
+const ThemeDarkModeContext = createContext();
 
-export const useTheme_darkMode = () => useContext(ThemeContext);
+export const useTheme_darkMode = () => useContext(ThemeDarkModeContext);
 
-export function ThemeProvider_darkMode({ children }) {
+export function ThemeDarkModeProvider({ children }) {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    const getTheme_dark = async () => {
+    const getDarkMode = async () => {
       try {
-        const storedTheme_dark = await AsyncStorage.getItem("isDarkMode");
-        const parsedTheme = storedTheme_dark ? JSON.parse(storedTheme_dark) : false;
-        setIsDarkMode(parsedTheme);
+        const storedDarkMode = await AsyncStorage.getItem("isDarkMode");
+        const parsedDarkMode = storedDarkMode ? JSON.parse(storedDarkMode) : false;
+        setIsDarkMode(parsedDarkMode);
       } catch (error) {
-        console.error("Error loading theme:", error);
+        console.error("Error loading dark mode:", error);
       }
     };
-    getTheme_dark();
+    getDarkMode();
   }, []);
 
   return (
-    <ThemeContext.Provider value={{ isDarkMode, setIsDarkMode }}>
+    <ThemeDarkModeContext.Provider value={{ isDarkMode, setIsDarkMode }}>
       {children}
-    </ThemeContext.Provider>
+    </ThemeDarkModeContext.Provider>
   );
 }
