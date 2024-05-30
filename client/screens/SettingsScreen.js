@@ -1,12 +1,12 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Text, Switch, View, StyleSheet, Button } from "react-native";
 import { GlobalLayout } from "../components/Layout";
 import { useTheme } from "../context/theme";
 import { GlobalStyles } from "../styles/global";
 import { useTheme_darkMode } from "../context/theme-darkMode";
 import { GlobalStyles_darkMode } from "../styles/global-darkMode";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { TouchableOpacity } from "react-native-gesture-handler";
-import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function SettingsScreen({ navigation }) {
   const { isLargeText, setIsLargeText } = useTheme();
@@ -15,9 +15,9 @@ export default function SettingsScreen({ navigation }) {
   const { isDarkMode, setIsDarkMode } = useTheme_darkMode();
 
   const handleLogout = () => {
-    // You can add authentication logic here
     navigation.navigate('Login', { screen: 'LoginScreen' });
   };
+
   return (
     <GlobalLayout>
       <GestureHandlerRootView>
@@ -30,7 +30,8 @@ export default function SettingsScreen({ navigation }) {
                 await AsyncStorage.setItem("isLargeText", JSON.stringify(!isLargeText));
                 setIsLargeText(!isLargeText);
               }}
-              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              trackColor={styles.switchTrackColor}
+              thumbColor={isLargeText ? "#12747c" : "#f4f3f4"}
             />
           </View>
           <View style={styles.view}>
@@ -41,17 +42,11 @@ export default function SettingsScreen({ navigation }) {
                 await AsyncStorage.setItem("isDarkMode", JSON.stringify(!isDarkMode));
                 setIsDarkMode(!isDarkMode);
               }}
-              trackColor={{ false: "#767577", true: "#81b0ff" }}
+              trackColor={styles.switchTrackColor}
+              thumbColor={isDarkMode ? "#12747c" : "#f4f3f4"}
             />
           </View>
-          {/* <View style={styles.logoutButtonWrapper}>
-            <TouchableOpacity
-              style={styles.logoutButton}
-              onPress={handleLogout}
-            >
-              <Text style={styles.centeredText}>Logout</Text>
-            </TouchableOpacity>
-          </View> */}
+
           <View className="px-5 pb-5 mt-auto">
             <TouchableOpacity
               onPress={handleLogout}
@@ -61,8 +56,6 @@ export default function SettingsScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
           </View>
-
-
         </View>
       </GestureHandlerRootView>
     </GlobalLayout>
@@ -71,6 +64,8 @@ export default function SettingsScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   view: {
+    marginLeft: 20,
+    marginRight: 20,
     paddingLeft: 20,
     paddingRight: 20,
     display: "flex",
@@ -78,6 +73,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 10,
+    marginBottom: 20,
+
   },
   container: {
     flex: 1,
@@ -90,22 +87,17 @@ const styles = StyleSheet.create({
   containerDarkMode: {
     backgroundColor: '#121212',
   },
-  logoutButtonWrapper: {
-    marginTop: 'auto',
-    paddingLeft: 20,
-    paddingRight: 20,
-    marginBottom: 40,
+  switchThumbColor: {
+    backgroundColor: '#fff',
   },
-  logoutButton: {
-    backgroundColor: '#ccc',
-    textAlign: 'center',
-    color: '#000',
-    paddingTop: 10,
-    paddingBottom: 10,
-    borderRadius: 20
+  switchTrackColor: {
+    true: '#12747c',
+    false: '#767577',
   },
-  centeredText: {
-    textAlign: 'center',
-    fontSize: 20
-  }
+  switchContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
 });
+

@@ -11,8 +11,11 @@ export function GlobalStyles_darkMode() {
     background: {
       backgroundColor: isDarkMode ? "#000000" : "#ffffff",
     },
+    background_settings: {
+      backgroundColor: isDarkMode ? "#333" : "#fff",
+    },
     button: {
-      backgroundColor: isDarkMode ? "#ffffff" : "#000000",
+      backgroundColor: isDarkMode ? "#09c1bd" : "#12747c",
     },
     buttonText: {
       color: isDarkMode ? "#000000" : "#ffffff",

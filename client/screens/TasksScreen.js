@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme_darkMode } from "../context/theme-darkMode";
+import CustomAlert from '../components/Alert'; // Import the custom alert component
 
 export default function TasksScreen() {
   const globalStyles = GlobalStyles();
@@ -17,6 +18,8 @@ export default function TasksScreen() {
   const [taskInput, setTaskInput] = useState('');
   const [dueDate, setDueDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
 
   const addTask = (selectedDate) => {
     if (taskInput.trim() === '' || !selectedDate) {
@@ -44,7 +47,14 @@ export default function TasksScreen() {
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
     if (selectedDate) {
-      addTask(selectedDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set the time to midnight for comparison
+      if (selectedDate < today) {
+        setAlertMessage("The due date cannot be before today's date.");
+        setAlertVisible(true);
+      } else {
+        addTask(selectedDate);
+      }
     }
   };
 
@@ -84,21 +94,22 @@ export default function TasksScreen() {
               <Swipeable
                 key={item.id}
                 onSwipeableOpen={(direction, Swipeable) => {
-                  if (direction === 'right') {
+                  if (direction === 'left') {
                     markTaskAsCompleted(item.id);
                     Swipeable.close();
-                  } else if (direction === 'left') {
+                  } else if (direction === 'right') {
                     deleteTask(item.id);
+                    Swipeable.close();
                   }
                 }}
                 renderLeftActions={() => (
-                  <TouchableOpacity style={styles.deleteButton}>
-                    <Icon name="trash" size={20} color="white" />
+                  <TouchableOpacity style={styles.completedButton}>
+                    <Icon name={item.completed ? "times" : "check"} size={20} color="white" />
                   </TouchableOpacity>
                 )}
                 renderRightActions={() => (
-                  <TouchableOpacity style={styles.completedButton}>
-                    <Icon name={item.completed ? "times" : "check"} size={20} color="white" />
+                  <TouchableOpacity style={styles.deleteButton}>
+                    <Icon name="trash" size={20} color="white" />
                   </TouchableOpacity>
                 )}
               >
@@ -111,6 +122,12 @@ export default function TasksScreen() {
           </ScrollView>
         </View>
       </GestureHandlerRootView>
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        isDarkMode={isDarkMode}
+      />
     </GlobalLayout>
   );
 }
@@ -143,16 +160,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: 70,
-    borderTopRightRadius: 20,
-    borderBottomRightRadius: 20
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+
   },
   completedButton: {
     backgroundColor: 'green',
-    justifyContent: 'center',
+    justifyContent:
+      'center',
     alignItems: 'center',
     width: 70,
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20
   },
   plusButton: {
     display: 'flex',
