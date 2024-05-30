@@ -103,18 +103,20 @@ export default function LoginScreen({ navigation }) {
         <Image className="h-full w-full absolute" source={require('../assets/images/image.png')} />
 
         <View className="w-full h-full flex flex-column items-center">
-          <View className="flex-column justify-center pt-16">
+          <View className="flex-column justify-center items-center pt-16">
             {/* Lightbulb image */}
             <Image
-              style={styles.image}
+              style={styles.LogoImage}
               source={require('../assets/images/lightbulb.png')}>
             </Image>
             {/* title */}
-            <View className="flex items-center pt-3">
-              <Text className="text-[#09c1bd] font-bold tracking-wider text-5xl mb-16">
+            <Image
+              style={styles.LogoText}
+              source={require('../assets/images/logo.png')}>
+            </Image>
+            {/* <Text className="text-[#09c1bd] font-bold tracking-wider text-5xl mb-16">
                 ToDo App
-              </Text>
-            </View>
+              </Text> */}
           </View>
           {/* form */}
           <View className="w-full flex justify-around pt-5 pb-10 mt-auto bg-slate-200">
@@ -201,9 +203,15 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
   },
-  image: {
+  LogoImage: {
     height: 150,
     objectFit: 'contain',
     resizeMode: 'contain'
+  },
+  LogoText: {
+    height: 50,
+    objectFit: 'contain',
+    resizeMode: 'contain',
+    marginTop: 15
   }
 });
