@@ -13,7 +13,8 @@ export function GlobalLayout({ children }) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: "#fff",
+    paddingTop: -100,
   },
   container: {
     flex: 1,
