@@ -114,9 +114,6 @@ export default function LoginScreen({ navigation }) {
               style={styles.LogoText}
               source={require('../assets/images/logo.png')}>
             </Image>
-            {/* <Text className="text-[#09c1bd] font-bold tracking-wider text-5xl mb-16">
-                ToDo App
-              </Text> */}
           </View>
           {/* form */}
           <View className="w-full flex justify-around pt-5 pb-10 mt-auto bg-slate-200">
@@ -158,7 +155,7 @@ export default function LoginScreen({ navigation }) {
               {/* Login Button */}
               <View className='w-full'>
                 <TouchableOpacity
-                  onPress={handleLoginDev}
+                  onPress={handleLogin}
                   className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
                   <Text className="text-xl font-bold text-white text-center">
                     Login

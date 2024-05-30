@@ -43,9 +43,6 @@ export default function AboutScreen() {
                   </Text>
                 </TouchableOpacity>
               </View>
-              {/* <TouchableOpacity onPress={showLicenseInfo}>
-                <Text>License Info</Text>
-              </TouchableOpacity> */}
             </View>
           </View>
         </ScrollView>
