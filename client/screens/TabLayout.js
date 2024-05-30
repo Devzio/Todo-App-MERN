@@ -42,7 +42,7 @@ const TabLayout = () => {
               } else if (route.name === "About") {
                 iconName = "info";
               }
-              return <FontAwesome5 name={iconName} size={size} color={color} />;
+              return <FontAwesome5 name={iconName} size={size} color='#09c1bd' />;
             },
           })}
         >

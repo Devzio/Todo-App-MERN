@@ -16,7 +16,6 @@ export default function SettingsScreen({ navigation }) {
 
   const handleLogout = () => {
     // You can add authentication logic here
-    navigation.navigate('LoginScreen');
     navigation.navigate('Login', { screen: 'LoginScreen' });
   };
   return (
@@ -45,14 +44,24 @@ export default function SettingsScreen({ navigation }) {
               trackColor={{ false: "#767577", true: "#81b0ff" }}
             />
           </View>
-          <View style={styles.logoutButtonWrapper}>
+          {/* <View style={styles.logoutButtonWrapper}>
             <TouchableOpacity
               style={styles.logoutButton}
               onPress={handleLogout}
             >
               <Text style={styles.centeredText}>Logout</Text>
             </TouchableOpacity>
+          </View> */}
+          <View className="px-5 pb-5 mt-auto">
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
+              <Text className="text-xl font-bold text-white text-center">
+                Logout
+              </Text>
+            </TouchableOpacity>
           </View>
+
 
         </View>
       </GestureHandlerRootView>

@@ -1,29 +1,18 @@
-// screens/LoginScreen.js
-
+import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
 import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler';
 
-export default function LoginScreen({ navigation }) {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleLogin = () => {
-    // authentication logic here
-    navigation.navigate('TabLayout');
-  };
-
+export default function SignupScreen() {
   const handleSignUp = () => {
     navigation.navigate('SignUp', { screen: 'SignupScreen' });
   };
-
   return (
     <GestureHandlerRootView>
       <View className="bg-slate-200 h-full w-full">
         <StatusBar style="light" />
-        <Image className="h-full w-full absolute" source={require('../assets/images/image.png')} />
+        <Image className="h-full w-full absolute" source={require('../assets/images/background.png')} />
 
         <View className="w-full h-full flex flex-column items-center">
           <View className="flex-column justify-center pt-16">
@@ -34,15 +23,16 @@ export default function LoginScreen({ navigation }) {
             </Image>
             {/* title */}
             <View className="flex items-center pt-3">
-              <Text className="text-[#09c1bd] font-bold tracking-wider text-5xl mb-16">
+              <Text className="text-white font-bold tracking-wider text-5xl mb-16">
                 ToDo App
               </Text>
             </View>
           </View>
           {/* form */}
-          <View className="w-full flex justify-around pt-5 pb-10 mt-auto bg-slate-200">
+          <View className="w-full flex justify-around pt-5 pb-10 mt-auto">
             {/* form */}
             <View className="flex items-center mx-4 space-y-4 ">
+              <Text className="text-3xl text-slate-500 font-semibold mb-5">Sign Up</Text>
               <View className="bg-black/5 p-5 rounded-2xl w-full">
                 <TextInput placeholder='Email' placeholderTextColor={'gray'} />
               </View>
@@ -51,48 +41,20 @@ export default function LoginScreen({ navigation }) {
               </View>
               <View className='w-full'>
                 <TouchableOpacity
-                  onPress={handleLogin}
-                  className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
-                  <Text className="text-xl font-bold text-white text-center">Login</Text>
+                  onPress={handleSignUp}
+                  className="w-full bg-sky-400 p-3 rounded-2xl mb-3">
+                  <Text className="text-xl font-bold text-white text-center">Sign Up</Text>
                 </TouchableOpacity>
               </View>
-              <View className="flex-row justify-center">
-                <Text>Don't hanve an account? </Text>
-                <TouchableOpacity onPress={handleSignUp}>
-                  <Text Text className="text-[#12747c] font-bold">Sign Up Here</Text>
-                </TouchableOpacity>
-              </View>
+
             </View>
 
           </View>
 
         </View>
-
-
-
-
       </View>
-      {/* <TextInput
-        style={styles.input}
-        placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      /> */}
-
-      {/* <Button title="Login" onPress={handleLogin} /> */}
     </GestureHandlerRootView>
-
-
-
-
-  );
+  )
 }
 
 const styles = StyleSheet.create({
