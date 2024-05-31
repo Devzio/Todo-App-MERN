@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { View, Text, TextInput, Button, ScrollView, TouchableOpacity, StyleSheet, Platform, Image } from 'react-native';
 import { GlobalLayout } from "../components/Layout";
 import { GlobalStyles } from "../styles/global";
 import { GlobalStyles_darkMode } from "../styles/global-darkMode";
@@ -89,37 +89,50 @@ export default function TasksScreen() {
               <Icon name="plus" size={20} style={[globalStyles_darkMode.buttonText]} />
             </TouchableOpacity>
           </View>
-          <ScrollView>
-            {tasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
-              <Swipeable
-                key={item.id}
-                onSwipeableOpen={(direction, Swipeable) => {
-                  if (direction === 'left') {
-                    markTaskAsCompleted(item.id);
-                    Swipeable.close();
-                  } else if (direction === 'right') {
-                    deleteTask(item.id);
-                    Swipeable.close();
-                  }
-                }}
-                renderLeftActions={() => (
-                  <TouchableOpacity style={styles.completedButton}>
-                    <Icon name={item.completed ? "times" : "check"} size={20} color="white" />
-                  </TouchableOpacity>
-                )}
-                renderRightActions={() => (
-                  <TouchableOpacity style={styles.deleteButton}>
-                    <Icon name="trash" size={20} color="white" />
-                  </TouchableOpacity>
-                )}
-              >
-                <View style={[styles.taskItem, item.completed && styles.completedTask]}>
-                  <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles.text, globalStyles_darkMode.text]}>{item.text}</Text>
-                  <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles_darkMode.text]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
-                </View>
-              </Swipeable>
-            ))}
-          </ScrollView>
+          {tasks.length === 0 ? (
+            <View className="flex-column justify-center items-center h-3/4">
+              <Image style={styles.noTasksImage} source={require('../assets/images/lightbulb_notasks.png')} />
+              <Text style={[styles.noTasksText, globalStyles.text, globalStyles_darkMode.text]}>
+                You have no Tasks Added
+              </Text>
+              <Text style={[styles.noTasksTextSmall, globalStyles_darkMode.text]}>
+                Go Ahead, Add one right now.{"\n"} You can swipe Right to check, uncheck it.{"\n"} Swipe Left to delete it.
+              </Text>
+            </View>
+
+          ) : (
+            <ScrollView>
+              {tasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
+                <Swipeable
+                  key={item.id}
+                  onSwipeableOpen={(direction, Swipeable) => {
+                    if (direction === 'left') {
+                      markTaskAsCompleted(item.id);
+                      Swipeable.close();
+                    } else if (direction === 'right') {
+                      deleteTask(item.id);
+                      Swipeable.close();
+                    }
+                  }}
+                  renderLeftActions={() => (
+                    <TouchableOpacity style={styles.completedButton}>
+                      <Icon name={item.completed ? "times" : "check"} size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                  renderRightActions={() => (
+                    <TouchableOpacity style={styles.deleteButton}>
+                      <Icon name="trash" size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                >
+                  <View style={[styles.taskItem, item.completed && styles.completedTask]}>
+                    <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles.text, globalStyles_darkMode.text]}>{item.text}</Text>
+                    <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles_darkMode.text]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
+                  </View>
+                </Swipeable>
+              ))}
+            </ScrollView>
+          )}
         </View>
       </GestureHandlerRootView>
       <CustomAlert
@@ -162,16 +175,14 @@ const styles = StyleSheet.create({
     width: 70,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
-
   },
   completedButton: {
     backgroundColor: 'green',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     alignItems: 'center',
     width: 70,
     borderTopRightRadius: 20,
-    borderBottomRightRadius: 20
+    borderBottomRightRadius: 20,
   },
   plusButton: {
     display: 'flex',
@@ -184,7 +195,7 @@ const styles = StyleSheet.create({
     width: 50,
   },
   disabledButton: {
-    backgroundColor: '#ccc'
+    backgroundColor: '#ccc',
   },
   dateTimePicker: {
     backgroundColor: 'black',
@@ -193,5 +204,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginVertical: 10,
     height: 43,
+  },
+  noTasksText: {
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  noTasksTextSmall: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  noTasksImage: {
+    height: 150,
+    objectFit: 'contain',
+    resizeMode: 'contain'
   },
 });

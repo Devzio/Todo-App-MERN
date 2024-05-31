@@ -155,7 +155,7 @@ export default function LoginScreen({ navigation }) {
               {/* Login Button */}
               <View className='w-full'>
                 <TouchableOpacity
-                  onPress={handleLogin}
+                  onPress={handleLoginDev}
                   className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
                   <Text className="text-xl font-bold text-white text-center">
                     Login
@@ -163,7 +163,7 @@ export default function LoginScreen({ navigation }) {
                 </TouchableOpacity>
                 {/* SignUp Button */}
                 <View className="flex-row justify-center">
-                  <Text>Don't hane an account? </Text>
+                  <Text>Don't have an account? </Text>
                   <TouchableOpacity onPress={goToSignUp}>
                     <Text Text className="text-[#12747c] font-bold">
                       Sign Up Here
