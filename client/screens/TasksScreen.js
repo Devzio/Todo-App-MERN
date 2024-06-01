@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, ScrollView, TouchableOpacity, StyleSheet, Platform, Image } from 'react-native';
 import { GlobalLayout } from "../components/Layout";
 import { GlobalStyles } from "../styles/global";
@@ -14,33 +14,59 @@ export default function TasksScreen() {
   const globalStyles_darkMode = GlobalStyles_darkMode();
   const { isDarkMode } = useTheme_darkMode();
 
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState({});
   const [taskInput, setTaskInput] = useState('');
   const [dueDate, setDueDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
+  userId = 1;
+
+  useEffect(() => {
+    fetch(`http://172.24.40.17:3000/tasks/${userId}`)
+      .then(response => response.json())
+      .then(data => {
+        const tasksObj = {};
+        data.forEach(task => {
+          tasksObj[task.id] = {
+            ...task,
+            dueDate: new Date(task.dueDate),
+            completed: Boolean(task.completed)
+          };
+        });
+        setTasks(tasksObj);
+      })
+      .catch(error => {
+        setAlertMessage("Failed to load tasks.");
+        setAlertVisible(true);
+        console.error(error);
+      });
+  }, []);
+
   const addTask = (selectedDate) => {
     if (taskInput.trim() === '' || !selectedDate) {
       return;
     }
-    setTasks(prevTasks => [...prevTasks, { id: Date.now().toString(), text: taskInput, dueDate: selectedDate, completed: false }]);
+    const newTask = { id: Date.now().toString(), text: taskInput, dueDate: selectedDate, completed: false };
+    setTasks(prevTasks => ({ ...prevTasks, [newTask.id]: newTask }));
     setTaskInput('');
     setDueDate(null);
     setShowDatePicker(false);
   };
 
   const deleteTask = id => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+    setTasks(prevTasks => {
+      const updatedTasks = { ...prevTasks };
+      delete updatedTasks[id];
+      return updatedTasks;
+    });
   };
 
   const markTaskAsCompleted = id => {
-    setTasks(prevTasks => prevTasks.map(task => {
-      if (task.id === id) {
-        return { ...task, completed: !task.completed };
-      }
-      return task;
+    setTasks(prevTasks => ({
+      ...prevTasks,
+      [id]: { ...prevTasks[id], completed: !prevTasks[id].completed }
     }));
   };
 
@@ -89,7 +115,7 @@ export default function TasksScreen() {
               <Icon name="plus" size={20} style={[globalStyles_darkMode.buttonText]} />
             </TouchableOpacity>
           </View>
-          {tasks.length === 0 ? (
+          {Object.keys(tasks).length === 0 ? (
             <View className="flex-column justify-center items-center h-3/4">
               <Image style={styles.noTasksImage} source={require('../assets/images/lightbulb_notasks.png')} />
               <Text style={[styles.noTasksText, globalStyles.text, globalStyles_darkMode.text]}>
@@ -102,7 +128,7 @@ export default function TasksScreen() {
 
           ) : (
             <ScrollView>
-              {tasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
+              {Object.values(tasks).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
                 <Swipeable
                   key={item.id}
                   onSwipeableOpen={(direction, Swipeable) => {

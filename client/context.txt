@@ -1,0 +1,757 @@
+===
+// client/App.js
+
+import React from 'react';
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import LoginScreen from "./screens/LoginScreen";
+import TabLayout from "./screens/TabLayout";
+import SignupScreen from './screens/SignupScreen';
+const Stack = createNativeStackNavigator();
+
+const App = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName="Login"
+        screenOptions={{ headerShown: false }}>
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+        />
+        <Stack.Screen
+          name="SignUp"
+          component={SignupScreen}
+        />
+        <Stack.Screen
+          name="TabLayout"
+          component={TabLayout}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
+
+export default App;
+
+
+
+===
+// client/components/Layout.js
+
+import { StatusBar } from "expo-status-bar"
+import { SafeAreaView } from "react-native-safe-area-context"
+import { View, StyleSheet } from "react-native"
+
+export function GlobalLayout({ children }) {
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>{children}</View>
+    </SafeAreaView>
+  )
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#fff",
+    paddingTop: -100,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    width: "100%",
+    alignSelf: "start",
+  }
+})
+
+
+===
+// client/screens/AboutScreen.js
+
+import React, { useState } from 'react';
+import { Text, View, StyleSheet, ScrollView } from "react-native";
+import { GlobalLayout } from "../components/Layout";
+import { useTheme } from "../context/theme";
+import { GlobalStyles } from "../styles/global";
+import { useTheme_darkMode } from "../context/theme-darkMode";
+import { GlobalStyles_darkMode } from "../styles/global-darkMode";
+import { GestureHandlerRootView, TouchableOpacity } from "react-native-gesture-handler";
+import CustomAlert from '../components/LongAlert';
+
+export default function AboutScreen() {
+  const globalStyles = GlobalStyles();
+  const globalStyles_darkMode = GlobalStyles_darkMode();
+  const { isDarkMode } = useTheme_darkMode();
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
+
+
+  const showLicenseInfo = () => {
+    setAlertMessage(
+      `MIT License\n\nCopyright (c) 2024 Jasdev\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.`
+    );
+    setAlertVisible(true);
+  };
+
+
+  return (
+    <GlobalLayout>
+      <GestureHandlerRootView>
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
+            <View style={styles.view} className="h-full px-5">
+              <Text style={[globalStyles.text, globalStyles_darkMode.text, styles.text]}>
+                This Task Manager App is a simple tool to record your tasks and when they are due. You can check and uncheck by swiping right on them and delete each task be swiping left.
+              </Text>
+
+              <View className="pb-3 mt-auto">
+                <TouchableOpacity
+                  onPress={showLicenseInfo}
+                  className="w-full bg-[#12747c] p-3 rounded-2xl">
+                  <Text className="text-xl font-bold text-white text-center">
+                    License Info
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+      </GestureHandlerRootView>
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        isDarkMode={isDarkMode}
+      />
+    </GlobalLayout>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  view: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    display: "flex",
+    justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "start",
+    flexDirection: "column",
+  },
+  container: {
+    flex: 1,
+    padding: 0,
+    backgroundColor: '#f5f5f7',
+  },
+  containerDarkMode: {
+    backgroundColor: '#121212',
+  },
+  text: {
+    paddingTop: 20,
+  },
+});
+
+
+===
+// client/screens/TasksScreen.js
+
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, ScrollView, TouchableOpacity, StyleSheet, Platform, Image } from 'react-native';
+import { GlobalLayout } from "../components/Layout";
+import { GlobalStyles } from "../styles/global";
+import { GlobalStyles_darkMode } from "../styles/global-darkMode";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useTheme_darkMode } from "../context/theme-darkMode";
+import CustomAlert from '../components/Alert'; // Import the custom alert component
+
+export default function TasksScreen() {
+  const globalStyles = GlobalStyles();
+  const globalStyles_darkMode = GlobalStyles_darkMode();
+  const { isDarkMode } = useTheme_darkMode();
+
+  const [tasks, setTasks] = useState([]);
+  const [taskInput, setTaskInput] = useState('');
+  const [dueDate, setDueDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  const addTask = (selectedDate) => {
+    if (taskInput.trim() === '' || !selectedDate) {
+      return;
+    }
+    setTasks(prevTasks => [...prevTasks, { id: Date.now().toString(), text: taskInput, dueDate: selectedDate, completed: false }]);
+    setTaskInput('');
+    setDueDate(null);
+    setShowDatePicker(false);
+  };
+
+  const deleteTask = id => {
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+  };
+
+  const markTaskAsCompleted = id => {
+    setTasks(prevTasks => prevTasks.map(task => {
+      if (task.id === id) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    }));
+  };
+
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set the time to midnight for comparison
+      if (selectedDate < today) {
+        setAlertMessage("The due date cannot be before today's date.");
+        setAlertVisible(true);
+      } else {
+        addTask(selectedDate);
+      }
+    }
+  };
+
+  return (
+    <GlobalLayout>
+      <GestureHandlerRootView>
+        <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
+          <View style={{ flexDirection: 'row', marginBottom: 20, padding: 20, paddingTop: 40 }}>
+            <TextInput
+              style={[globalStyles.text, globalStyles_darkMode.inputText, { flex: 1, borderWidth: 2, padding: 10, paddingLeft: 20, marginRight: 10, borderRadius: 30 }]}
+              placeholder="Enter Task"
+              placeholderTextColor={isDarkMode ? "#999" : "#ccc"}
+              value={taskInput}
+              onChangeText={setTaskInput}
+            />
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={new Date()}
+                mode="date"
+                display="default"
+                onChange={onChangeDate}
+                style={styles.dateTimePicker}
+                themeVariant="dark"
+              />
+            )}
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              disabled={taskInput.trim() === ''}
+              style={[styles.plusButton, globalStyles_darkMode.button, taskInput.trim() === '' && styles.disabledButton]}
+            >
+              <Icon name="plus" size={20} style={[globalStyles_darkMode.buttonText]} />
+            </TouchableOpacity>
+          </View>
+          {tasks.length === 0 ? (
+            <View className="flex-column justify-center items-center h-3/4">
+              <Image style={styles.noTasksImage} source={require('../assets/images/lightbulb_notasks.png')} />
+              <Text style={[styles.noTasksText, globalStyles.text, globalStyles_darkMode.text]}>
+                You have no Tasks Added
+              </Text>
+              <Text style={[styles.noTasksTextSmall, globalStyles_darkMode.text]}>
+                Go Ahead, Add one right now.{"\n"} You can swipe Right to check, uncheck it.{"\n"} Swipe Left to delete it.
+              </Text>
+            </View>
+
+          ) : (
+            <ScrollView>
+              {tasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
+                <Swipeable
+                  key={item.id}
+                  onSwipeableOpen={(direction, Swipeable) => {
+                    if (direction === 'left') {
+                      markTaskAsCompleted(item.id);
+                      Swipeable.close();
+                    } else if (direction === 'right') {
+                      deleteTask(item.id);
+                      Swipeable.close();
+                    }
+                  }}
+                  renderLeftActions={() => (
+                    <TouchableOpacity style={styles.completedButton}>
+                      <Icon name={item.completed ? "times" : "check"} size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                  renderRightActions={() => (
+                    <TouchableOpacity style={styles.deleteButton}>
+                      <Icon name="trash" size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                >
+                  <View style={[styles.taskItem, item.completed && styles.completedTask]}>
+                    <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles.text, globalStyles_darkMode.text]}>{item.text}</Text>
+                    <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles_darkMode.text]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
+                  </View>
+                </Swipeable>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      </GestureHandlerRootView>
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        isDarkMode={isDarkMode}
+      />
+    </GlobalLayout>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 0,
+    backgroundColor: '#f5f5f7',
+  },
+  containerDarkMode: {
+    backgroundColor: '#121212',
+  },
+  taskItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20
+  },
+  completedTask: {
+    // Add any specific styles for completed tasks if needed
+  },
+  completedText: {
+    color: '#999',
+    textDecorationLine: 'line-through',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  completedButton: {
+    backgroundColor: 'green',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  plusButton: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+    padding: 10,
+    borderRadius: 30,
+    height: 50,
+    width: 50,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  dateTimePicker: {
+    backgroundColor: 'black',
+    borderRadius: 5,
+    borderColor: '#C5C5C5',
+    borderWidth: 1,
+    marginVertical: 10,
+    height: 43,
+  },
+  noTasksText: {
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  noTasksTextSmall: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  noTasksImage: {
+    height: 150,
+    objectFit: 'contain',
+    resizeMode: 'contain'
+  },
+});
+
+===
+// client/screens/SettingsScreen.js
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Text, Switch, View, StyleSheet, Button } from "react-native";
+import { GlobalLayout } from "../components/Layout";
+import { useTheme } from "../context/theme";
+import { GlobalStyles } from "../styles/global";
+import { useTheme_darkMode } from "../context/theme-darkMode";
+import { GlobalStyles_darkMode } from "../styles/global-darkMode";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+export default function SettingsScreen({ navigation }) {
+  const { isLargeText, setIsLargeText } = useTheme();
+  const globalStyles = GlobalStyles();
+  const globalStyles_darkMode = GlobalStyles_darkMode();
+  const { isDarkMode, setIsDarkMode } = useTheme_darkMode();
+
+  const handleLogout = () => {
+    navigation.navigate('Login', { screen: 'LoginScreen' });
+  };
+
+  return (
+    <GlobalLayout>
+      <GestureHandlerRootView>
+        <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
+          <View style={styles.view}>
+            <Text style={[globalStyles.text, globalStyles_darkMode.text]}>Large Text</Text>
+            <Switch
+              value={isLargeText}
+              onValueChange={async () => {
+                await AsyncStorage.setItem("isLargeText", JSON.stringify(!isLargeText));
+                setIsLargeText(!isLargeText);
+              }}
+              trackColor={styles.switchTrackColor}
+              thumbColor={isLargeText ? "#12747c" : "#f4f3f4"}
+            />
+          </View>
+          <View style={styles.view}>
+            <Text style={[globalStyles.text, globalStyles_darkMode.text]}>Dark Mode</Text>
+            <Switch
+              value={isDarkMode}
+              onValueChange={async () => {
+                await AsyncStorage.setItem("isDarkMode", JSON.stringify(!isDarkMode));
+                setIsDarkMode(!isDarkMode);
+              }}
+              trackColor={styles.switchTrackColor}
+              thumbColor={isDarkMode ? "#12747c" : "#f4f3f4"}
+            />
+          </View>
+
+          <View className="px-5 pb-5 mt-auto">
+            <TouchableOpacity
+              onPress={handleLogout}
+              className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
+              <Text className="text-xl font-bold text-white text-center">
+                Logout
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </GestureHandlerRootView>
+    </GlobalLayout>
+  );
+}
+
+const styles = StyleSheet.create({
+  view: {
+    marginLeft: 20,
+    marginRight: 20,
+    paddingLeft: 20,
+    paddingRight: 20,
+    display: "flex",
+    justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    marginBottom: 20,
+
+  },
+  container: {
+    flex: 1,
+    padding: 0,
+    backgroundColor: '#f5f5f7',
+    flexDirection: "column",
+    display: 'flex',
+    paddingTop: 20
+  },
+  containerDarkMode: {
+    backgroundColor: '#121212',
+  },
+  switchThumbColor: {
+    backgroundColor: '#fff',
+  },
+  switchTrackColor: {
+    true: '#12747c',
+    false: '#767577',
+  },
+  switchContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+});
+
+
+
+===
+// client/styles/global.js
+
+import { StyleSheet } from "react-native";
+import { useTheme } from "../context/theme";
+
+export function GlobalStyles() {
+  const { isLargeText } = useTheme();
+
+  const styles = StyleSheet.create({
+    text: {
+      fontSize: isLargeText ? 22 : 16,
+    },
+  });
+
+  return styles;
+}
+===
+// styles/global-darkMode.js
+
+import { StyleSheet } from "react-native";
+import { useTheme_darkMode } from "../context/theme-darkMode";
+
+export function GlobalStyles_darkMode() {
+  const { isDarkMode } = useTheme_darkMode();
+
+  const styles = StyleSheet.create({
+    text: {
+      color: isDarkMode ? "#ffffff" : "#000000",
+    },
+    background: {
+      backgroundColor: isDarkMode ? "#000000" : "#ffffff",
+    },
+    background_settings: {
+      backgroundColor: isDarkMode ? "#333" : "#fff",
+    },
+    button: {
+      backgroundColor: isDarkMode ? "#09c1bd" : "#12747c",
+    },
+    buttonText: {
+      color: isDarkMode ? "#000000" : "#ffffff",
+    },
+    inputText: {
+      color: isDarkMode ? "#ffffff" : "#000000",
+      borderColor: isDarkMode ? "#ccc" : "#A7A7A7",
+    },
+    dateTimePicker: {
+      backgroundColor: isDarkMode ? "#333" : "#fff",
+      color: isDarkMode ? "#ccc" : "#A7A7A7",
+    },
+  });
+
+  return styles;
+}
+
+===
+// client/context/theme.js
+
+import { createContext, useState, useContext } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import { useEffect } from "react";
+
+const ThemeContext = createContext();
+
+export const useTheme = () => useContext(ThemeContext);
+
+export function ThemeProvider({ children }) {
+  const [isLargeText, setIsLargeText] = useState(false);
+
+  useEffect(() => {
+    const getTheme = async () => {
+      try {
+        const storedTheme = await AsyncStorage.getItem("isLargeText");
+        const parsedTheme = storedTheme ? JSON.parse(storedTheme) : false;
+        setIsLargeText(parsedTheme);
+      } catch (error) {
+        console.error("Error loading theme:", error);
+      }
+    };
+    getTheme();
+  }, []);
+
+  return (
+    <ThemeContext.Provider value={{ isLargeText, setIsLargeText }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+===
+// client/context/theme-darkMode.js
+
+import { createContext, useState, useContext, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const ThemeDarkModeContext = createContext();
+
+export const useTheme_darkMode = () => useContext(ThemeDarkModeContext);
+
+export function ThemeDarkModeProvider({ children }) {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const getDarkMode = async () => {
+      try {
+        const storedDarkMode = await AsyncStorage.getItem("isDarkMode");
+        const parsedDarkMode = storedDarkMode ? JSON.parse(storedDarkMode) : false;
+        setIsDarkMode(parsedDarkMode);
+      } catch (error) {
+        console.error("Error loading dark mode:", error);
+      }
+    };
+    getDarkMode();
+  }, []);
+
+  return (
+    <ThemeDarkModeContext.Provider value={{ isDarkMode, setIsDarkMode }}>
+      {children}
+    </ThemeDarkModeContext.Provider>
+  );
+}
+
+===
+
+// server/app.js
+
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+const options = require("./db");
+const knex = require("knex")(options)
+
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
+var tasksRouter = require('./routes/tasks');
+
+var app = express();
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+  req.db = knex;
+  next();
+})
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/tasks', tasksRouter);
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  next(createError(404));
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+module.exports = app;
+
+===
+
+// server/db.js
+
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+const options = require("./db");
+const knex = require("knex")(options)
+
+var indexRouter = require('./routes/index');
+var usersRouter = require('./routes/users');
+var tasksRouter = require('./routes/tasks');
+
+var app = express();
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'jade');
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+  req.db = knex;
+  next();
+})
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+app.use('/tasks', tasksRouter);
+
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  next(createError(404));
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+
+module.exports = app;
+
+===
+// server/routes/index.js
+
+var express = require('express');
+var router = express.Router();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { token } = require('morgan');
+
+router.get("/", (req, res, next) => {
+  const userId = req.body.userId;
+  if (!userId) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete - UserID is required!",
+    });
+  }
+
+  const queryUsers = req.db.from("tasks").select("*").where("userId", "=", userId);
+  queryUsers.then(tasks => {
+    res.status(200).json({
+      tasks
+    }).catch((error) => {
+      console.log("Unexpected error: ", error)
+      res.status(500).json({
+        error: true,
+        message: "Unexpected error"
+      })
+    })
+  });
+});
+
+
+
