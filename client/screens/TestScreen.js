@@ -1,77 +1,280 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+// client/screens/TasksScreen.js
 
-export default function TestScreen() {
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { GlobalLayout } from "../components/Layout";
+import { GlobalStyles } from "../styles/global";
+import { GlobalStyles_darkMode } from "../styles/global-darkMode";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useTheme_darkMode } from "../context/theme-darkMode";
+import CustomAlert from '../components/Alert'; // Import the custom alert component
+import axios from 'axios';
+
+export default function TasksScreen() {
+  const globalStyles = GlobalStyles();
+  const globalStyles_darkMode = GlobalStyles_darkMode();
+  const { isDarkMode } = useTheme_darkMode();
+
+  const [tasks, setTasks] = useState({});
+  const [taskInput, setTaskInput] = useState('');
+  const [dueDate, setDueDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  userId = 1;
 
   useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await fetch('http://172.24.40.17:3000/tasks'); // Adjust the port if needed
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        setTasks(data);
-      } catch (error) {
-        setError(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTasks();
+    fetch(`http://172.24.40.17:3000/tasks/${userId}`)
+      .then(response => response.json())
+      .then(data => {
+        const tasksObj = {};
+        data.forEach(task => {
+          tasksObj[task.id] = {
+            ...task,
+            dueDate: new Date(task.dueDate),
+            completed: Boolean(task.completed)
+          };
+        });
+        setTasks(tasksObj);
+      })
+      .catch(error => {
+        setAlertMessage("Failed to load tasks.");
+        setAlertVisible(true);
+        console.error(error);
+      });
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+  const addTask = async (selectedDate) => {
+    if (taskInput.trim() === '' || !selectedDate) {
+      return;
+    }
+
+    const newTask = {
+      userId: 1,  // Assuming a fixed userId for demonstration purposes
+      text: taskInput,
+      dueDate: selectedDate,
+      completed: 0
+    };
+
+    try {
+      const response = await axios.post(`http://172.24.40.17:3000/tasks/`, newTask);
+      const savedTask = response.data;
+      setTasks(prevTasks => ({ ...prevTasks, [savedTask.id]: savedTask }));
+      setTaskInput('');
+      setDueDate(null);
+      setShowDatePicker(false);
+    } catch (error) {
+      setAlertMessage("Failed to add task.");
+      setAlertVisible(true);
+      console.error(error);
+    }
+  };
+
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`http://172.24.40.17:3000/tasks/${id}`);
+      setTasks(prevTasks => {
+        const updatedTasks = { ...prevTasks };
+        delete updatedTasks[id];
+        return updatedTasks;
+      });
+    } catch (error) {
+      setAlertMessage("Failed to delete task.");
+      setAlertVisible(true);
+      console.error(error);
+    }
+  };
+
+  const toggleTaskCompletion = async (id, completed) => {
+    try {
+      await axios.put(`http://172.24.40.17:3000/tasks/${id}`, { completed: !completed });
+      setTasks(prevTasks => ({
+        ...prevTasks,
+        [id]: { ...prevTasks[id], completed: !completed }
+      }));
+    } catch (error) {
+      setAlertMessage("Failed to update task completion status.");
+      setAlertVisible(true);
+      console.error(error);
+    }
+  };
+
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set the time to midnight for comparison
+      if (selectedDate < today) {
+        setAlertMessage("The due date cannot be before today's date.");
+        setAlertVisible(true);
+      } else {
+        addTask(selectedDate);
+      }
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Tasks</Text>
-      <FlatList
-        data={tasks}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.task}>
-            <Text style={styles.taskName}>{item.taskName}</Text>
-            <Text>Date Due: {item.dateDue}</Text>
-            <Text>Is Done: {item.isDone ? 'Yes' : 'No'}</Text>
+    <GlobalLayout>
+      <GestureHandlerRootView>
+        <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
+          <View style={{ flexDirection: 'row', marginBottom: 20, padding: 20, paddingTop: 40 }}>
+            <TextInput
+              style={[globalStyles.text, globalStyles_darkMode.inputText, { flex: 1, borderWidth: 2, padding: 10, paddingLeft: 20, marginRight: 10, borderRadius: 30 }]}
+              placeholder="Enter Task"
+              placeholderTextColor={isDarkMode ? "#999" : "#ccc"}
+              value={taskInput}
+              onChangeText={setTaskInput}
+            />
+            {showDatePicker && (
+              <DateTimePicker
+                testID="dateTimePicker"
+                value={new Date()}
+                mode="date"
+                display="default"
+                onChange={onChangeDate}
+                style={styles.dateTimePicker}
+                themeVariant="dark"
+              />
+            )}
+            <TouchableOpacity
+              onPress={() => setShowDatePicker(true)}
+              disabled={taskInput.trim() === ''}
+              style={[styles.plusButton, globalStyles_darkMode.button, taskInput.trim() === '' && styles.disabledButton]}
+            >
+              <Icon name="plus" size={20} style={[globalStyles_darkMode.buttonText]} />
+            </TouchableOpacity>
           </View>
-        )}
+          {Object.keys(tasks).length === 0 ? (
+            <View className="flex-column justify-center items-center h-3/4">
+              <Image style={styles.noTasksImage} source={require('../assets/images/lightbulb_notasks.png')} />
+              <Text style={[styles.noTasksText, globalStyles.text, globalStyles_darkMode.text]}>
+                You have no Tasks Added
+              </Text>
+              <Text style={[styles.noTasksTextSmall, globalStyles_darkMode.text]}>
+                Go Ahead, Add one right now.{"\n"} You can swipe Right to check, uncheck it.{"\n"} Swipe Left to delete it.
+              </Text>
+            </View>
+
+          ) : (
+            <ScrollView>
+              {Object.values(tasks).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
+                <Swipeable
+                  key={item.id}
+                  onSwipeableOpen={(direction, Swipeable) => {
+                    if (direction === 'left') {
+                      toggleTaskCompletion(item.id, item.completed);
+                      Swipeable.close();
+                    } else if (direction === 'right') {
+                      deleteTask(item.id);
+                      Swipeable.close();
+                    }
+                  }}
+                  renderLeftActions={() => (
+                    <TouchableOpacity style={styles.completedButton}>
+                      <Icon name={item.completed ? "times" : "check"} size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                  renderRightActions={() => (
+                    <TouchableOpacity style={styles.deleteButton}>
+                      <Icon name="trash" size={20} color="white" />
+                    </TouchableOpacity>
+                  )}
+                >
+                  <View style={[styles.taskItem, item.completed && styles.completedTask]}>
+                    <Text style={[styles.taskText, globalStyles.text, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.text}</Text>
+                    <Text style={[styles.taskText, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
+                  </View>
+                </Swipeable>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      </GestureHandlerRootView>
+      <CustomAlert
+        visible={alertVisible}
+        message={alertMessage}
+        onClose={() => setAlertVisible(false)}
+        isDarkMode={isDarkMode}
       />
-    </View>
+    </GlobalLayout>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: '#fff',
+    padding: 0,
+    backgroundColor: '#f5f5f7',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  containerDarkMode: {
+    backgroundColor: '#121212',
   },
-  task: {
-    marginBottom: 16,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
+  taskItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20
+  },
+  completedTask: {
+    // Add any specific styles for completed tasks if needed
+  },
+  completedText: {
+    color: '#999',
+    textDecorationLine: 'line-through',
+  },
+  deleteButton: {
+    backgroundColor: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
+  },
+  completedButton: {
+    backgroundColor: 'green',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+  plusButton: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+    padding: 10,
+    borderRadius: 30,
+    height: 50,
+    width: 50,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  dateTimePicker: {
+    backgroundColor: 'black',
+    borderRadius: 5,
+    borderColor: '#C5C5C5',
     borderWidth: 1,
-    borderColor: '#ddd',
+    marginVertical: 10,
+    height: 43,
   },
-  taskName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  noTasksText: {
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  noTasksTextSmall: {
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 16,
+  },
+  noTasksImage: {
+    height: 150,
+    objectFit: 'contain',
+    resizeMode: 'contain'
   },
 });

@@ -28,6 +28,10 @@ export function GlobalStyles_darkMode() {
       backgroundColor: isDarkMode ? "#333" : "#fff",
       color: isDarkMode ? "#ccc" : "#A7A7A7",
     },
+    completedText: {
+      color: isDarkMode ? "#42f56f" : "#008013",
+      textDecorationLine: 'line-through',
+    }
   });
 
   return styles;

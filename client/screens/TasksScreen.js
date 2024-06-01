@@ -1,5 +1,7 @@
+// client/screens/TasksScreen.js
+
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, ScrollView, TouchableOpacity, StyleSheet, Platform, Image } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { GlobalLayout } from "../components/Layout";
 import { GlobalStyles } from "../styles/global";
 import { GlobalStyles_darkMode } from "../styles/global-darkMode";
@@ -8,6 +10,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useTheme_darkMode } from "../context/theme-darkMode";
 import CustomAlert from '../components/Alert'; // Import the custom alert component
+import axios from 'axios';
 
 export default function TasksScreen() {
   const globalStyles = GlobalStyles();
@@ -44,30 +47,59 @@ export default function TasksScreen() {
       });
   }, []);
 
-  const addTask = (selectedDate) => {
+  const addTask = async (selectedDate) => {
     if (taskInput.trim() === '' || !selectedDate) {
       return;
     }
-    const newTask = { id: Date.now().toString(), text: taskInput, dueDate: selectedDate, completed: false };
-    setTasks(prevTasks => ({ ...prevTasks, [newTask.id]: newTask }));
-    setTaskInput('');
-    setDueDate(null);
-    setShowDatePicker(false);
+
+    const newTask = {
+      userId: 1,  // Assuming a fixed userId for demonstration purposes
+      text: taskInput,
+      dueDate: selectedDate,
+      completed: 0
+    };
+
+    try {
+      const response = await axios.post(`http://172.24.40.17:3000/tasks/`, newTask);
+      const savedTask = response.data;
+      setTasks(prevTasks => ({ ...prevTasks, [savedTask.id]: savedTask }));
+      setTaskInput('');
+      setDueDate(null);
+      setShowDatePicker(false);
+    } catch (error) {
+      setAlertMessage("Failed to add task.");
+      setAlertVisible(true);
+      console.error(error);
+    }
   };
 
-  const deleteTask = id => {
-    setTasks(prevTasks => {
-      const updatedTasks = { ...prevTasks };
-      delete updatedTasks[id];
-      return updatedTasks;
-    });
+  const deleteTask = async (id) => {
+    try {
+      await axios.delete(`http://172.24.40.17:3000/tasks/${id}`);
+      setTasks(prevTasks => {
+        const updatedTasks = { ...prevTasks };
+        delete updatedTasks[id];
+        return updatedTasks;
+      });
+    } catch (error) {
+      setAlertMessage("Failed to delete task.");
+      setAlertVisible(true);
+      console.error(error);
+    }
   };
 
-  const markTaskAsCompleted = id => {
-    setTasks(prevTasks => ({
-      ...prevTasks,
-      [id]: { ...prevTasks[id], completed: !prevTasks[id].completed }
-    }));
+  const toggleTaskCompletion = async (id, completed) => {
+    try {
+      await axios.put(`http://172.24.40.17:3000/tasks/${id}`, { completed: !completed });
+      setTasks(prevTasks => ({
+        ...prevTasks,
+        [id]: { ...prevTasks[id], completed: !completed }
+      }));
+    } catch (error) {
+      setAlertMessage("Failed to update task completion status.");
+      setAlertVisible(true);
+      console.error(error);
+    }
   };
 
   const onChangeDate = (event, selectedDate) => {
@@ -133,7 +165,7 @@ export default function TasksScreen() {
                   key={item.id}
                   onSwipeableOpen={(direction, Swipeable) => {
                     if (direction === 'left') {
-                      markTaskAsCompleted(item.id);
+                      toggleTaskCompletion(item.id, item.completed);
                       Swipeable.close();
                     } else if (direction === 'right') {
                       deleteTask(item.id);
@@ -152,8 +184,8 @@ export default function TasksScreen() {
                   )}
                 >
                   <View style={[styles.taskItem, item.completed && styles.completedTask]}>
-                    <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles.text, globalStyles_darkMode.text]}>{item.text}</Text>
-                    <Text style={[styles.taskText, item.completed && styles.completedText, globalStyles_darkMode.text]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
+                    <Text style={[styles.taskText, globalStyles.text, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.text}</Text>
+                    <Text style={[styles.taskText, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
                   </View>
                 </Swipeable>
               ))}
