@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
   },
   view: {
     paddingTop: 20,
-
     paddingBottom: 20,
     display: "flex",
     justifyContent: "space-between",
