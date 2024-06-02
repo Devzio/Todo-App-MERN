@@ -30,8 +30,15 @@ export default function SignupScreen({ navigation }) {
         return;
       }
       if (!validatePassword()) {
-        console.warn("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+        // console.warn("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
+        // console.log("User registered successfully");
+        Alert.alert(
+          "Password too weak",
+          "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+          [{ text: "OK" }]
+        );
         return;
+
       }
       // if (user.password !== confirmPassword) {
       //   console.error("Passwords do not match");
