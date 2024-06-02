@@ -1,7 +1,6 @@
 // client/screens/LoginScreen.js
 
 import React, { useState, useEffect } from 'react';
-// import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, TextInput, StyleSheet, Image } from 'react-native';
 import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler';
@@ -14,18 +13,19 @@ export default function LoginScreen({ navigation }) {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const users = JSON.parse(await AsyncStorage.getItem('users')) || [];
-        console.log('Users:', users);
-      } catch (error) {
-        console.error('Failed to fetch users', error);
-      }
-    };
 
-    fetchUsers();
-  }, []);
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const users = JSON.parse(await AsyncStorage.getItem('users')) || [];
+  //       console.log('Users:', users);
+  //     } catch (error) {
+  //       console.error('Failed to fetch users', error);
+  //     }
+  //   };
+
+  //   fetchUsers();
+  // }, []);
 
   const validateEmail = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,20 +56,25 @@ export default function LoginScreen({ navigation }) {
     setPassword(text);
   };
 
-  // New loginUser function
   const loginUser = async () => {
     try {
-      // Get the array of users
-      const users = JSON.parse(await AsyncStorage.getItem('users')) || [];
+      const response = await fetch('http://172.24.40.17:3000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Check if a user with the entered email and password exists
-      const userExists = users.some(user => user.email === email && user.password === password);
+      const data = await response.json();
 
-      if (userExists) {
-        console.log('User logged in successfully');
-        navigation.navigate('TabLayout'); //  Navigate to Home screen of the App
+      if (response.ok) {
+        console.log('User logged in successfully', data);
+        await AsyncStorage.setItem('token', data.token);
+        await AsyncStorage.setItem('userId', data.userId.toString()); // Store the userId
+        navigation.navigate('TabLayout'); // Navigate to Home screen of the App
       } else {
-        console.error('Invalid credentials');
+        console.error('Invalid credentials', data.message);
       }
     } catch (error) {
       console.error('Failed to log in', error);
@@ -80,7 +85,7 @@ export default function LoginScreen({ navigation }) {
     const isEmailValid = validateEmail();
     const isPasswordValid = validatePassword();
     if (isEmailValid && isPasswordValid) {
-      loginUser(); // Call loginUser instead of logging to console
+      loginUser();
       setEmail("");
       setPassword("");
     }
@@ -94,8 +99,6 @@ export default function LoginScreen({ navigation }) {
   const goToSignUp = () => {
     navigation.navigate('SignUp', { screen: 'SignupScreen' });
   };
-
-
 
   return (
     <GestureHandlerRootView>
@@ -156,7 +159,7 @@ export default function LoginScreen({ navigation }) {
               {/* Login Button */}
               <View className='w-full'>
                 <TouchableOpacity
-                  onPress={handleLoginDev}
+                  onPress={handleLogin}
                   className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
                   <Text className="text-xl font-bold text-white text-center">
                     Login
@@ -209,5 +212,9 @@ const styles = StyleSheet.create({
     objectFit: 'contain',
     resizeMode: 'contain',
     marginTop: 15
-  }
+  },
+  error: {
+    color: 'gray',
+    fontSize: 14,
+  },
 });

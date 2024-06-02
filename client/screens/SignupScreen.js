@@ -33,10 +33,10 @@ export default function SignupScreen({ navigation }) {
         console.warn("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character");
         return;
       }
-      if (user.password !== confirmPassword) {
-        console.error("Passwords do not match");
-        return;
-      }
+      // if (user.password !== confirmPassword) {
+      //   console.error("Passwords do not match");
+      //   return;
+      // }
 
       const response = await fetch('http://172.24.40.17:3000/register', {
         method: 'POST',

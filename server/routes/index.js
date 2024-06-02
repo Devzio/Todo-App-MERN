@@ -8,7 +8,7 @@ router.get('/', function (req, res, next) {
 });
 
 // Post User credentials for signup 
-router.post("/register", async (req, res, next) => {
+router.post("/register", (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
@@ -47,7 +47,7 @@ router.post("/register", async (req, res, next) => {
     });
   }
 });
-
+//===========================================
 router.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -60,33 +60,37 @@ router.post("/login", (req, res) => {
     return;
   }
 
-  req.db.from("users").select("username", "password").where("username", "=", email).then(users => {
+  req.db.from("users").select("id", "username", "password").where("username", "=", email).then(users => {
     if (users.length == 0) {
       res.status(401).json({
         error: true,
         message: "User doesn't exist"
       });
+      return;  // Add this line to stop further execution
     }
 
     const user = users[0];
+    console.log(users[0]);
     return bcrypt.compare(password, user.password).then(match => {
       if (!match) {
         res.status(401).json({
           error: true,
           message: "Passwords do not match"
         });
+        return;  // Add this line to stop further execution
       }
 
       const secretKey = "secretkey";
       const expires_in = 60 * 60 * 24;
       const exp = Date.now() + expires_in * 1000;
       const token = jwt.sign({ email, exp }, secretKey);
-      res.json({ token_type: "Bearer", token, expires_in });
+      res.json({ token_type: "Bearer", token, expires_in, userId: user.id });
     });
   });
 });
 
-// Add the authorize middleware function
+
+// Update authorize middleware to include userId
 const authorize = (req, res, next) => {
   const authorization = req.headers.authorization;
   let token = null;
@@ -99,7 +103,7 @@ const authorize = (req, res, next) => {
     });
   }
   try {
-    const secretKey = "secretkey"; // Ensure to use environment variables in production
+    const secretKey = "secretkey";
     const decoded = jwt.verify(token, secretKey);
     if (decoded.exp < Date.now()) {
       return res.status(401).json({
@@ -108,6 +112,7 @@ const authorize = (req, res, next) => {
       });
     }
     req.email = decoded.email;
+    req.userId = decoded.userId; // Add userId to request object
     next();
   } catch (err) {
     res.status(401).json({
@@ -118,12 +123,25 @@ const authorize = (req, res, next) => {
   }
 };
 
-// Add the authorized GET API for retrieving users
+
+// Authorized GET API for retrieving users
 router.get('/users', authorize, async (req, res) => {
   try {
-    const users = await req.db.from('users').select('id', 'user'); // Exclude passwords from response
+    const users = await req.db.from('users').select('id', 'username'); // Exclude passwords from response
     res.json(users);
   } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Authorized GET API for retrieving specific user
+router.get('/users/:userId', authorize, async (req, res) => {
+  try {
+    const users = await req.db.from('users').select('id', 'username').where({ "userId": req.params.userId });
+    res.json(users);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

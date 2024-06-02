@@ -1,5 +1,4 @@
 // client/screens/TasksScreen.js
-
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { GlobalLayout } from "../components/Layout";
@@ -11,6 +10,7 @@ import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler'
 import { useTheme_darkMode } from "../context/theme-darkMode";
 import CustomAlert from '../components/Alert'; // Import the custom alert component
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
 
 export default function TasksScreen() {
   const globalStyles = GlobalStyles();
@@ -24,12 +24,13 @@ export default function TasksScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  userId = 1;
-
   useEffect(() => {
-    fetch(`http://172.24.40.17:3000/tasks/${userId}`)
-      .then(response => response.json())
-      .then(data => {
+    const fetchTasks = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId'); // Get the stored userId
+        const response = await fetch(`http://172.24.40.17:3000/tasks/${userId}`);
+        const data = await response.json();
+
         const tasksObj = {};
         data.forEach(task => {
           tasksObj[task.id] = {
@@ -39,12 +40,14 @@ export default function TasksScreen() {
           };
         });
         setTasks(tasksObj);
-      })
-      .catch(error => {
+      } catch (error) {
         setAlertMessage("Failed to load tasks.");
         setAlertVisible(true);
         console.error(error);
-      });
+      }
+    };
+
+    fetchTasks();
   }, []);
 
   const addTask = async (selectedDate) => {
@@ -52,8 +55,10 @@ export default function TasksScreen() {
       return;
     }
 
+    const userId = await AsyncStorage.getItem('userId'); // Get the stored userId
+
     const newTask = {
-      userId: 1,  // Assuming a fixed userId for demonstration purposes
+      userId,  // Use the stored userId
       text: taskInput,
       dueDate: selectedDate.toString(),
       completed: 0
@@ -72,6 +77,7 @@ export default function TasksScreen() {
       console.error(error);
     }
   };
+
 
   const deleteTask = async (id) => {
     try {
