@@ -14,6 +14,7 @@ export default function LoginScreen({ navigation }) {
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // code to handle login data in async storage - no longer needed as passwords are now encrypted in db
   // useEffect(() => {
   //   const fetchUsers = async () => {
   //     try {
@@ -131,6 +132,7 @@ export default function LoginScreen({ navigation }) {
                   value={email}
                   onChangeText={handleEmailChange}
                   autoCapitalize="none"
+                  className="w-full"
                 />
               </View>
               {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
@@ -144,6 +146,8 @@ export default function LoginScreen({ navigation }) {
                   value={password}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  className="w-11/12"
+
                 />
                 <TouchableOpacity
                   style={styles.button}

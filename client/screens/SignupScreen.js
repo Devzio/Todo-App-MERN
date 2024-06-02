@@ -84,6 +84,7 @@ export default function SignupScreen({ navigation }) {
                   onChangeText={(text) => setUser({ ...user, email: text })}
                   value={user.email}
                   autoCapitalize="none"
+                  className="w-full"
                 />
               </View>
               <View className="bg-black/5 p-5 rounded-2xl w-full mb-3 flex-row justify-between">
@@ -94,6 +95,7 @@ export default function SignupScreen({ navigation }) {
                   value={user.password}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  className="w-11/12"
                 />
                 <TouchableOpacity
                   style={styles.button}
