@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View, StyleSheet, ScrollView } from "react-native";
+import { Text, View, StyleSheet, ScrollView, Image } from "react-native";
 import { GlobalLayout } from "../components/Layout";
 import { useTheme } from "../context/theme";
 import { GlobalStyles } from "../styles/global";
@@ -29,9 +29,19 @@ export default function AboutScreen() {
       <GestureHandlerRootView>
         <ScrollView contentContainerStyle={styles.scrollViewContent}>
           <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
-            <View style={styles.view} className="h-full px-5">
+            <View style={styles.view} className="h-full w-full flex flex-column justify-center items-center px-5">
+
+              <Image
+                style={styles.LogoImage}
+                source={require('../assets/images/lightbulb.png')}>
+              </Image>
+              <Image
+                style={styles.LogoText}
+                source={require('../assets/images/logo.png')}>
+              </Image>
+
               <Text style={[globalStyles.text, globalStyles_darkMode.text, styles.text]}>
-                This Task Manager App is a simple tool to record your tasks and when they are due. You can check and uncheck by swiping right on them and delete each task be swiping left.
+                Welcome to the Task Manager App! This simple yet powerful tool helps you keep track of your tasks and their due dates effortlessly. With an intuitive swipe functionality, you can check or uncheck tasks by swiping right and delete tasks by swiping left. {"\n"}{"\n"}Stay organized and manage your to-dos with ease using the Task Manager App.
               </Text>
 
               <View className="pb-3 mt-auto">
@@ -81,4 +91,18 @@ const styles = StyleSheet.create({
   text: {
     paddingTop: 20,
   },
+  LogoImage: {
+    height: 90,
+    objectFit: 'contain',
+    resizeMode: 'contain',
+  },
+  LogoText: {
+    height: 40,
+    objectFit: 'contain',
+    resizeMode: 'contain',
+    marginTop: 10,
+    marginRight: 'auto',
+    marginLeft: 'auto',
+    width: 200
+  }
 });

@@ -156,7 +156,7 @@ export default function LoginScreen({ navigation }) {
               {/* Login Button */}
               <View className='w-full'>
                 <TouchableOpacity
-                  onPress={handleLogin}
+                  onPress={handleLoginDev}
                   className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
                   <Text className="text-xl font-bold text-white text-center">
                     Login
