@@ -4,16 +4,6 @@ var express = require('express');
 var router = express.Router();
 const authenticateToken = require('./authenticateToken');
 
-// GET all tasks for a user
-// router.get('/', authenticateToken, async (req, res) => {
-//   try {
-//     console.log('anythng');
-//     const tasks = await req.db.from('tasks').select('*').where({ userId: req.user.id });
-//     res.json(tasks);
-//   } catch (err) {
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
 
 router.get('/tasks', async (req, res) => {
   try {
@@ -24,21 +14,6 @@ router.get('/tasks', async (req, res) => {
     res.status(500).json({ error: 'Internal Serverrrr Error' });
   }
 });
-
-
-
-// POST create a new task
-// router.post('/', authenticateToken, async (req, res) => {
-//   const { text, dueDate } = req.body;
-//   if (!text || !dueDate) return res.status(400).json({ error: 'Text and due date are required' });
-
-//   try {
-//     await req.db('tasks').insert({ userId: req.user.id, text, dueDate, completed: false });
-//     res.status(201).json({ message: 'Task created' });
-//   } catch (err) {
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
 
 
 router.post('/', async (req, res) => {

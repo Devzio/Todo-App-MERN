@@ -69,7 +69,7 @@ export default function LoginScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('User logged in successfully', data);
+        // console.log('User logged in successfully', data);
         await AsyncStorage.setItem('token', data.token);
         await AsyncStorage.setItem('userId', data.userId.toString()); // Store the userId
         navigation.navigate('TabLayout'); // Navigate to Home screen of the App

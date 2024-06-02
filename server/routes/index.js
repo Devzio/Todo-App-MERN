@@ -1,3 +1,4 @@
+require('dotenv').config();
 var express = require('express');
 var router = express.Router();
 const bcrypt = require("bcrypt");
@@ -70,7 +71,7 @@ router.post("/login", (req, res) => {
     }
 
     const user = users[0];
-    console.log(users[0]);
+    // console.log(users[0]);
     return bcrypt.compare(password, user.password).then(match => {
       if (!match) {
         res.status(401).json({
