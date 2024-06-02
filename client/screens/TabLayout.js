@@ -43,9 +43,10 @@ const TabLayout = () => {
               } else if (route.name === "About") {
                 iconName = "info";
               }
-              else if (route.name === "Test") {
-                iconName = "question";
-              }
+              // test screen to test stuff out
+              // else if (route.name === "Test") {
+              //   iconName = "question";
+              // }
               return <FontAwesome5 name={iconName} size={size} color='#09c1bd' />;
             },
           })}
@@ -53,7 +54,7 @@ const TabLayout = () => {
           <Tab.Screen name="Tasks" component={TasksScreen} />
           <Tab.Screen name="Settings" component={SettingsScreen} />
           <Tab.Screen name="About" component={AboutScreen} />
-          <Tab.Screen name="Test" component={TestScreen} />
+          {/* <Tab.Screen name="Test" component={TestScreen} /> */}
         </Tab.Navigator>
       </ThemeDarkModeProvider>
     </ThemeProvider>

@@ -24,6 +24,7 @@ export default function TasksScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
+  // fetch tasks using user id of logged in user
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -55,10 +56,11 @@ export default function TasksScreen() {
       return;
     }
 
-    const userId = await AsyncStorage.getItem('userId'); // Get the stored userId
+    // Get the stored userId
+    const userId = await AsyncStorage.getItem('userId');
 
     const newTask = {
-      userId,  // Use the stored userId
+      userId,
       text: taskInput,
       dueDate: selectedDate.toString(),
       completed: 0
