@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, TextInput, Button, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Image, Alert } from 'react-native';
 import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -50,7 +50,11 @@ export default function SignupScreen({ navigation }) {
 
       if (response.ok) {
         console.log("User registered successfully");
-        navigation.navigate('Login');
+        Alert.alert(
+          "Registration Successful",
+          "Your account has been created successfully!",
+          [{ text: "OK", onPress: () => navigation.navigate('Login') }]
+        );
       } else {
         console.error(data.message || "Failed to register user");
       }
