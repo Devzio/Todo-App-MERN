@@ -1,10 +1,152 @@
 var express = require('express');
 var router = express.Router();
-
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 /* GET home page. */
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
+
+// Post User credentials for signup 
+router.post("/register", (req, res, next) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      error: true,
+      message: "Request body incomplete - email and password required!",
+    });
+  }
+
+  try {
+    const users = req.db.from("users").select("*").where("username", "=", email);
+    users.then(users => {
+      if (users.length > 0) {
+        res.status(400).json({
+          error: true,
+          message: "User already exists",
+        });
+        return
+      }
+
+      const saltRounds = 10;
+      const hash = bcrypt.hashSync(password, saltRounds);
+      return req.db.from("users").insert({ username: email, password: hash });
+    }).then(() => {
+      res.status(201).json({
+        error: false,
+        message: "User created",
+      });
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      error: true,
+      message: "Internal Server Error",
+    });
+  }
+});
+//===========================================
+router.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password;
+
+  if (!email || !password) {
+    res.status(400).json({
+      error: true,
+      message: "Request body incomplete - email and password required"
+    });
+    return;
+  }
+
+  req.db.from("users").select("id", "username", "password").where("username", "=", email).then(users => {
+    if (users.length == 0) {
+      res.status(401).json({
+        error: true,
+        message: "User doesn't exist"
+      });
+      return;  // Add this line to stop further execution
+    }
+
+    const user = users[0];
+    console.log(users[0]);
+    return bcrypt.compare(password, user.password).then(match => {
+      if (!match) {
+        res.status(401).json({
+          error: true,
+          message: "Passwords do not match"
+        });
+        return;  // Add this line to stop further execution
+      }
+
+      const secretKey = "secretkey";
+      const expires_in = 60 * 60 * 24;
+      const exp = Date.now() + expires_in * 1000;
+      const token = jwt.sign({ email, exp }, secretKey);
+      res.json({ token_type: "Bearer", token, expires_in, userId: user.id });
+    });
+  });
+});
+
+
+// Update authorize middleware to include userId
+const authorize = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  let token = null;
+  if (authorization && authorization.split(" ").length === 2) {
+    token = authorization.split(" ")[1];
+  } else {
+    return res.status(401).json({
+      error: true,
+      message: "No authorization token provided"
+    });
+  }
+  try {
+    const secretKey = "secretkey";
+    const decoded = jwt.verify(token, secretKey);
+    if (decoded.exp < Date.now()) {
+      return res.status(401).json({
+        error: true,
+        message: "Expired token"
+      });
+    }
+    req.email = decoded.email;
+    req.userId = decoded.userId; // Add userId to request object
+    next();
+  } catch (err) {
+    res.status(401).json({
+      error: true,
+      message: "Invalid token",
+      error: err
+    });
+  }
+};
+
+
+// Authorized GET API for retrieving users
+router.get('/users', authorize, async (req, res) => {
+  try {
+    const users = await req.db.from('users').select('id', 'username'); // Exclude passwords from response
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Authorized GET API for retrieving specific user
+router.get('/users/:userId', authorize, async (req, res) => {
+  try {
+    const users = await req.db.from('users').select('id', 'username').where({ "userId": req.params.userId });
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+
 
 // Get API to get all tasks
 router.get('/tasks', async (req, res) => {

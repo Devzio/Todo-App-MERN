@@ -19,7 +19,7 @@ export default function TasksScreen() {
 
   const [tasks, setTasks] = useState({});
   const [taskInput, setTaskInput] = useState('');
-  const [dueDate, setDueDate] = useState(null);
+  const [dueDate, setDueDate] = useState({});
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -34,7 +34,7 @@ export default function TasksScreen() {
         data.forEach(task => {
           tasksObj[task.id] = {
             ...task,
-            dueDate: new Date(task.dueDate),
+            dueDate: new Date(task.dueDate).toString(),
             completed: Boolean(task.completed)
           };
         });
@@ -55,14 +55,14 @@ export default function TasksScreen() {
     const newTask = {
       userId: 1,  // Assuming a fixed userId for demonstration purposes
       text: taskInput,
-      dueDate: selectedDate,
+      dueDate: selectedDate.toString(),
       completed: 0
     };
 
     try {
       const response = await axios.post(`http://172.24.40.17:3000/tasks/`, newTask);
       const savedTask = response.data;
-      setTasks(prevTasks => ({ ...prevTasks, [savedTask.id]: savedTask }));
+      setTasks(prevTasks => ({ ...prevTasks, [savedTask.id]: { ...savedTask, dueDate: new Date(savedTask.dueDate).toString() } }));
       setTaskInput('');
       setDueDate(null);
       setShowDatePicker(false);
@@ -104,7 +104,7 @@ export default function TasksScreen() {
 
   const onChangeDate = (event, selectedDate) => {
     setShowDatePicker(false);
-    if (selectedDate) {
+    if (event.type === 'set' && selectedDate) {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Set the time to midnight for comparison
       if (selectedDate < today) {
@@ -116,15 +116,22 @@ export default function TasksScreen() {
     }
   };
 
+  const sortedTasks = Object.values(tasks).sort((a, b) => {
+    if (a.completed === b.completed) {
+      return new Date(a.dueDate) - new Date(b.dueDate);
+    }
+    return a.completed ? 1 : -1;
+  });
+
   return (
     <GlobalLayout>
       <GestureHandlerRootView>
         <View style={[styles.container, isDarkMode && styles.containerDarkMode]}>
-          <View style={{ flexDirection: 'row', marginBottom: 20, padding: 20, paddingTop: 40 }}>
+          <View style={[styles.taskInputContainer]}>
             <TextInput
-              style={[globalStyles.text, globalStyles_darkMode.inputText, { flex: 1, borderWidth: 2, padding: 10, paddingLeft: 20, marginRight: 10, borderRadius: 30 }]}
+              style={[styles.taskInputBox, globalStyles.text, globalStyles_darkMode.inputText]}
               placeholder="Enter Task"
-              placeholderTextColor={isDarkMode ? "#999" : "#ccc"}
+              placeholderTextColor={isDarkMode ? "#999" : "#A7A7A7"}
               value={taskInput}
               onChangeText={setTaskInput}
             />
@@ -160,7 +167,7 @@ export default function TasksScreen() {
 
           ) : (
             <ScrollView>
-              {Object.values(tasks).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).map(item => (
+              {sortedTasks.map(item => (
                 <Swipeable
                   key={item.id}
                   onSwipeableOpen={(direction, Swipeable) => {
@@ -185,7 +192,7 @@ export default function TasksScreen() {
                 >
                   <View style={[styles.taskItem, item.completed && styles.completedTask]}>
                     <Text style={[styles.taskText, globalStyles.text, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.text}</Text>
-                    <Text style={[styles.taskText, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
+                    <Text style={[styles.dateText, globalStyles_darkMode.text, item.completed && globalStyles_darkMode.completedText]}>{item.dueDate && item.dueDate.toString().substring(0, 15)}</Text>
                   </View>
                 </Swipeable>
               ))}
@@ -212,6 +219,21 @@ const styles = StyleSheet.create({
   containerDarkMode: {
     backgroundColor: '#121212',
   },
+  taskInputContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    padding: 20,
+    paddingTop: 40
+  },
+  taskInputBox: {
+    flex: 1,
+    borderWidth: 2,
+    padding: 10,
+    paddingLeft: 20,
+    marginRight: 10,
+    borderRadius: 30,
+    color: 'red'
+  },
   taskItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -230,17 +252,24 @@ const styles = StyleSheet.create({
     backgroundColor: 'red',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 70,
+    width: 60,
     borderTopLeftRadius: 20,
     borderBottomLeftRadius: 20,
+    height: 40,
+    marginTop: 'auto',
+    marginBottom: 'auto'
   },
   completedButton: {
     backgroundColor: 'green',
     justifyContent: 'center',
     alignItems: 'center',
-    width: 70,
+    width: 60,
     borderTopRightRadius: 20,
     borderBottomRightRadius: 20,
+    height: 40,
+    marginTop: 'auto',
+    marginBottom: 'auto',
+
   },
   plusButton: {
     display: 'flex',
@@ -276,5 +305,8 @@ const styles = StyleSheet.create({
     height: 150,
     objectFit: 'contain',
     resizeMode: 'contain'
+  },
+  taskText: {
+    width: '70%',
   },
 });
