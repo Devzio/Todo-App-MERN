@@ -1,4 +1,5 @@
-// screens/LoginScreen.js
+// client/screens/LoginScreen.js
+
 import React, { useState, useEffect } from 'react';
 // import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -155,7 +156,7 @@ export default function LoginScreen({ navigation }) {
               {/* Login Button */}
               <View className='w-full'>
                 <TouchableOpacity
-                  onPress={handleLoginDev}
+                  onPress={handleLogin}
                   className="w-full bg-[#12747c] p-3 rounded-2xl mb-3">
                   <Text className="text-xl font-bold text-white text-center">
                     Login
@@ -171,8 +172,6 @@ export default function LoginScreen({ navigation }) {
                   </TouchableOpacity>
                 </View>
               </View>
-
-
             </View>
           </View>
         </View>
