@@ -18,9 +18,9 @@ npm install<br />
 3)Start the Expo development server:<br />
 npm start<br />
 Scan the QR code using the Expo Go app on your mobile device or run it on an emulator by tapping 'a'.<br />
-1) On a new terminal go to server folder<br />
+4) On a new terminal go to server folder<br />
 cd server<br />
-1) Run node js server<br />
+5) Run node js server<br />
 npm run dev<br />
 
 Endpoints Used<br />
